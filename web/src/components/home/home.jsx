@@ -24,7 +24,7 @@ const Home = () => {
         text: postText.value,
       })
       .then(function (response) {
-        console.log(response.data);
+        // console.log(response.data);
         Swal.fire({
           icon: 'success',
           title: 'Post Added',
@@ -47,7 +47,7 @@ const Home = () => {
       .get(`/api/v1/posts`)
       .then(function (response) {
         let fetchedPosts = response.data;
-        console.log("fetched posts", fetchedPosts);
+        // console.log("fetched posts", fetchedPosts);
         setPosts(fetchedPosts);
       })
       .catch(function (error) {
@@ -63,9 +63,9 @@ const Home = () => {
         autocapitalize: 'off'
       },
       showCancelButton: true,
-      cancelButtonColor: "#24232c",
+      cancelButtonColor: "#3a3659",
       confirmButtonText: 'Delete',
-      confirmButtonColor: "#24232c",
+      confirmButtonColor: "#3a3659",
       showLoaderOnConfirm: true,
       preConfirm: (password) => {
         if (password === '12345') {
@@ -112,9 +112,9 @@ const Home = () => {
         autocapitalize: 'off'
       },
       showCancelButton: true,
-      cancelButtonColor: "#24232c",
+      cancelButtonColor: "#3a3659",
       confirmButtonText: 'Edit',
-      confirmButtonColor: "#24232c",
+      confirmButtonColor: "#3a3659",
       showLoaderOnConfirm: true,
       preConfirm: (password) => {
         if (password === '12345') {
@@ -130,9 +130,9 @@ const Home = () => {
                   <textarea id="editText" class="swal2-input text" placeholder="Post Text" required>${post.text}</textarea>
                 `,
                 showCancelButton: true,
-                cancelButtonColor: "#24232c",
+                cancelButtonColor: "#3a3659",
                 confirmButtonText: 'Update',
-                confirmButtonColor: "#24232c",
+                confirmButtonColor: "#3a3659",
                 preConfirm: () => {
 
                   const editedTitle = document.getElementById('editTitle').value;
@@ -201,9 +201,9 @@ const Home = () => {
         autocapitalize: 'off'
       },
       showCancelButton: true,
-      cancelButtonColor: "#24232c",
+      cancelButtonColor: "#3a3659",
       confirmButtonText: 'Delete All Posts',
-      confirmButtonColor: "#24232c",
+      confirmButtonColor: "#3a3659",
       showLoaderOnConfirm: true,
       preConfirm: (password) => {
         if (password === '12345') {
@@ -246,28 +246,18 @@ const Home = () => {
     });
   }
 
-  const search = async (event) => {
-    event.preventDefault();
-    const query = searchInputRef.current.value;
-    console.log(query)
-    if (!query.trim()) {
-      return;
-    }
-
+  const search = async (e) => {
+    e.preventDefault();
     try {
-      const response = await axios.get(`/api/v1/search?q=${query}`);
-      const searchResults = response.data;
+      const response = await axios.get(`/api/v1/search?q=${searchInputRef.current.value}`);
+      // console.log(response.data);
 
-      if (searchResults.length > 0) {
-        setPosts(searchResults);
-      } else {
-        console.log('No search results found.');
-      }
+      setPosts([...response.data]);
     } catch (error) {
-      console.error('Error while searching:', error);
+      console.log(error.data);
     }
+    e.target.reset()
   };
-
 
   return (
     <div>

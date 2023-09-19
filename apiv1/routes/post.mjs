@@ -36,7 +36,7 @@ router.post('/post', async (req, res, next) => {
         text: req.body.text,
         time: new Date()
     })
-    console.log(insertResponse)
+    // console.log(insertResponse)
 
     res.send('post created');
 })
@@ -47,7 +47,7 @@ router.get('/posts', async (req, res, next) => {
         const cursor = col.find({}).sort({ _id: -1 });
         let results = await cursor.toArray();
 
-        console.log(results);
+        // console.log(results);
         res.send(results);
     } catch (error) {
         console.error(error);
