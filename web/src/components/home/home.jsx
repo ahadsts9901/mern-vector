@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import Swal from 'sweetalert2';
 import './home.css';
@@ -7,6 +7,7 @@ import { Post, NoPost } from '../post/post';
 
 const Home = () => {
   const [posts, setPosts] = useState([]);
+  const searchInputRef = useRef(null)
 
   useEffect(() => {
     renderPost();
@@ -245,14 +246,37 @@ const Home = () => {
     });
   }
 
+  const search = async (event) => {
+    event.preventDefault();
+    const query = searchInputRef.current.value;
+    console.log(query)
+    if (!query.trim()) {
+      return;
+    }
+
+    try {
+      const response = await axios.get(`/api/v1/search?q=${query}`);
+      const searchResults = response.data;
+
+      if (searchResults.length > 0) {
+        setPosts(searchResults);
+      } else {
+        console.log('No search results found.');
+      }
+    } catch (error) {
+      console.error('Error while searching:', error);
+    }
+  };
+
+
   return (
     <div>
       <div className="space-around row">
         <h1 className="green">MERN Vector</h1>
       </div>
 
-      <form className='search'>
-        <input required type="search" placeholder="Search Here..." className="input" />
+      <form className='search' onSubmit={search}>
+        <input required type="search" placeholder="Search Here..." className="input" ref={searchInputRef} />
         <button type="submit" className="button">
           Search
         </button>
@@ -269,12 +293,12 @@ const Home = () => {
         </label>
         <textarea required id="text" placeholder="Enter Text" className="input"></textarea>
         <div className='row'>
-        <button type="submit" className="button">
-          Post
-        </button>
-        <button type="button" className="button" onClick={deleteAllPosts}>
-          Delete All
-        </button>
+          <button type="submit" className="button">
+            Post
+          </button>
+          <button type="button" className="button" onClick={deleteAllPosts}>
+            Delete All
+          </button>
         </div>
       </form>
       <h2 className="green">Posts</h2>

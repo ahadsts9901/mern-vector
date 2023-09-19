@@ -1,6 +1,14 @@
 import express from 'express';
 import { client } from '../../mongodb.mjs'
 import { ObjectId } from 'mongodb';
+import openai from 'openai';
+import 'dotenv/config';
+
+const initializeOpenAIClient = () => {
+    return new openai({
+        apiKey: process.env.OPENAI_API_KEY, // Replace with your OpenAI API key
+    });
+};
 
 const db = client.db("cruddb")
 const col = db.collection("vector")
@@ -8,7 +16,7 @@ const col = db.collection("vector")
 let router = express.Router()
 
 // POST    /api/v1/post
-router.post('/post', async(req, res, next) => {
+router.post('/post', async (req, res, next) => {
 
     if (!req.body.title ||
         !req.body.text
@@ -34,7 +42,7 @@ router.post('/post', async(req, res, next) => {
 })
 
 //GET  ALL   POSTS   /api/v1/post/:postId
-router.get('/posts', async(req, res, next) => {
+router.get('/posts', async (req, res, next) => {
     try {
         const cursor = col.find({}).sort({ _id: -1 });
         let results = await cursor.toArray();
@@ -47,7 +55,7 @@ router.get('/posts', async(req, res, next) => {
 });
 
 // GET  ONE   POST   /api/v1/posts/
-router.get('/post/:postId', async(req, res, next) => {
+router.get('/post/:postId', async (req, res, next) => {
     const postId = new ObjectId(req.params.postId);
 
     try {
@@ -65,7 +73,7 @@ router.get('/post/:postId', async(req, res, next) => {
 
 // DELETE ALL   /api/v1/posts
 
-router.delete('/posts/all', async(req, res, next) => {
+router.delete('/posts/all', async (req, res, next) => {
     try {
 
         const deleteResponse = await col.deleteMany({});
@@ -82,7 +90,7 @@ router.delete('/posts/all', async(req, res, next) => {
 
 
 // DELETE  /api/v1/post/:postId
-router.delete('/post/:postId', async(req, res, next) => {
+router.delete('/post/:postId', async (req, res, next) => {
     const postId = new ObjectId(req.params.postId);
 
     try {
@@ -100,7 +108,7 @@ router.delete('/post/:postId', async(req, res, next) => {
 // EDIT post
 
 // PUT /api/v1/post/:postId
-router.put('/post/:postId', async(req, res, next) => {
+router.put('/post/:postId', async (req, res, next) => {
     const postId = new ObjectId(req.params.postId);
     const { title, text } = req.body;
 
@@ -121,6 +129,49 @@ router.put('/post/:postId', async(req, res, next) => {
         console.error(error);
     }
 });
+
+// search
+
+router.get("/search", async (req, res) => {
+    const queryText = req.query.q;
+
+    try {
+        // Initialize the OpenAI client
+        const openaiClient = initializeOpenAIClient();
+
+        // Create an embedding for the query text
+        const response = await openaiClient.embeddings.create({
+            model: "text-embedding-ada-002",
+            input: queryText,
+        });
+
+        // Extract the vector from the response
+        const vector = response?.data[0]?.embedding;
+
+        // Perform a search using the vector
+        const documents = await col
+            .aggregate([
+                {
+                    $search: {
+                        index: "abc",
+                        knnBeta: {
+                            vector: vector,
+                            path: "embedding",
+                            k: 10,
+                        },
+                        scoreDetails: true,
+                    },
+                },
+            ])
+            .toArray();
+
+        res.send(documents);
+    } catch (error) {
+        console.error(error);
+        res.status(500).send('Error during search');
+    }
+});
+
 
 
 export default router
